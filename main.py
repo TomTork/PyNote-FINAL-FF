@@ -1094,12 +1094,16 @@ class Note(QMainWindow):  # Окно создания / редактирован
         self.setWindowTitle(f'PyNote: {self.label} (Saved)')
 
     def click_save_as(self):  # Функция обработки нажатия save as
-        file = QtWidgets.QFileDialog.getSaveFileName(None, 'Save', '/', "Text Files (*.txt)")
-        text = self.line.toPlainText()
-        if file[0]:
-            with open(file[0], 'w') as file:
-                file.write(text)
-        self.close()
+        try:
+            file = QtWidgets.QFileDialog.getSaveFileName(None, 'Save', '/', "Text Files (*.txt)")
+            text = self.line.toPlainText()
+            if file[0]:
+                with open(file[0], 'w', encoding='utf-8') as file:
+                    file.write(text)
+            self.close()
+        except BaseException as e:
+            print(e)
+
 
     def exit_w_s(self):
         self.close()
@@ -1123,25 +1127,33 @@ class Note(QMainWindow):  # Окно создания / редактирован
         self.line.setFont(font)
 
     def parse_csv(self):
-        text = Tk().clipboard_get()
-        sp = [re.split(';;|;|,|;;;| ', i) for i in text.split('\n')]  # Разбиение csv на массивы
-        max_len = sorted([len(i) for i in sp])[-1]  # Проверка максимальной длины для каждой строки стобца
-        for i in sp:
-            if len(i) != max_len:
-                for t in range(max_len - len(i)):
-                    i.append('')
-        le = [max([len(i) for i in list(col)]) for col in zip(*sp)]  # Нахождение максимальной длины в повёрнутом списке
-        separator = '-' * (sum(le) + len(le)) + "\n"
-        save = separator
-        k = 0
-        for i in sp:
-            for w in range(len(i)):
-                save += i[w] + " " * (le[w] - len(i[w])) + "|"
-            if k != (len(sp) - 1):
-                save += "\n" + separator
-            k += 1
-        save += '\n' + '-' * (sum(le) + len(le)) + "\n"
-        self.line.append(save)
+        try:
+            text = Tk().clipboard_get()
+            try:
+                sp = [re.split(';;|;|,|;;;| ', i) for i in text.split('\n')]  # Разбиение csv на массивы
+                max_len = sorted([len(i) for i in sp])[-1]  # Проверка максимальной длины для каждой строки стобца
+                for i in sp:
+                    if len(i) != max_len:
+                        for t in range(max_len - len(i)):
+                            i.append('')
+                le = [max([len(i) for i in list(col)]) for col in
+                      zip(*sp)]  # Нахождение максимальной длины в повёрнутом списке
+                separator = '-' * (sum(le) + len(le)) + "\n"
+                save = separator
+                k = 0
+                for i in sp:
+                    for w in range(len(i)):
+                        save += i[w] + " " * (le[w] - len(i[w])) + "|"
+                    if k != (len(sp) - 1):
+                        save += "\n" + separator
+                    k += 1
+                save += '\n' + '-' * (sum(le) + len(le)) + "\n"
+                self.line.append(save)
+            except BaseException:
+                self.line.append(text)
+        except BaseException:
+            pass
+
 
     def change_text(self):
         if self.label != '':
