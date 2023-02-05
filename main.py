@@ -262,7 +262,7 @@ def notify(text, title):  # Функция для уведомления пол�
 def confirm():  # Проверка пароля
     global GEnter
     if Database().get_ask_key() == 1:
-        dialog = ConfirmPasswordInputDialog(labels=["Confirm password"])
+        dialog = ConfirmPasswordInputDialog(labels=["Пароль:"])
         if not dialog.exec() and not Gkey:
             GEnter = False
             dialog.close()
@@ -274,7 +274,7 @@ class GeneratePasswordForNoteInputDialog(QDialog):  # Создание паро�
         self.database = Database()
         self.setWindowIcon(QIcon('pynote.png'))
         buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
-        self.setWindowTitle('Create a password')
+        self.setWindowTitle('Придумайте пароль')
         layout = QFormLayout(self)
         self.inputs = []
         for lab in labels:
@@ -303,7 +303,7 @@ class ConfirmPasswordForNoteInputDialog(QDialog):  # Подтверждение 
         self.setWindowIcon(QIcon('pynote.png'))
         self.number = number
         buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
-        self.setWindowTitle('Confirm password')
+        self.setWindowTitle('Подтвердите пароль')
         layout = QFormLayout(self)
         self.inputs = []
         for lab in labels:
@@ -328,7 +328,7 @@ class ConfirmPasswordInputDialog(QDialog):  # Окно, открываемое �
         self.database = Database()
         self.setWindowIcon(QIcon('pynote.png'))
         buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
-        self.setWindowTitle('Confirm password')
+        self.setWindowTitle('Подтвердите пароль')
         layout = QFormLayout(self)
         self.inputs = []
         for lab in labels:
@@ -353,7 +353,7 @@ class AreYouSureInputDialog(QDialog):  # Окно, открываемое в с�
         super().__init__(parent)
         self.setWindowIcon(QIcon('pynote.png'))
         buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
-        self.setWindowTitle('Are you sure? This action is not safe. Re-enter the password to confirm')
+        self.setWindowTitle('Вы уверены? Это действие не безопасно. Введите пароль повторно для подтверждения')
         layout = QFormLayout(self)
         self.inputs = []
         for lab in labels:
@@ -382,7 +382,7 @@ class MyInputDialog(QDialog):  # Окно, открываемое в случа�
         super().__init__(parent)
         self.setWindowIcon(QIcon('pynote.png'))
         buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok, self)
-        self.setWindowTitle('Your database has been destroyed. Please enter the lines')
+        self.setWindowTitle('Ваша база данных была уничтожена. Пожалуйста, заполните поля ниже')
         layout = QFormLayout(self)
         self.inputs = []
         for lab in labels:
@@ -656,12 +656,12 @@ class Example(QWidget):  # Стартовое окно
         self.edt1 = QLineEdit('', self)
         self.edt1.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         self.edt1.setContentsMargins(10, 0, 10, 0)
-        self.btn = QPushButton('Next', self)
-        self.btn2 = QPushButton('Browse', self)
+        self.btn = QPushButton('Начать!', self)
+        self.btn2 = QPushButton('Обзор', self)
         self.initUI()
 
     def click_browse(self):  # Обработка нажатия на кнопку 'browse'
-        folderpath = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Folder')
+        folderpath = QtWidgets.QFileDialog.getExistingDirectory(self, 'Выберите папку')
         self.edt1.setText(str(folderpath).replace('/', "\\"))
 
     def click_next(self):  # Обработка нажатия на кнопку 'next'
@@ -670,8 +670,8 @@ class Example(QWidget):  # Стартовое окно
             if self.edt1.text():
                 # Создание окна с задаванием ключа
                 q = QInputDialog()
-                text, ok = q.getText(self, 'Think of a secret key',
-                                                'Enter your code:')
+                text, ok = q.getText(self, 'Придумайте пароль',
+                                                'Введите:')
                 if ok and text:
                     Gkey = text
                 else:
@@ -708,7 +708,7 @@ class Example(QWidget):  # Стартовое окно
         font.setBold(True)
         font.setPointSize(45)  # Размер шрифта
         lbl1.setFont(font)
-        lbl2 = QLabel('Let`s start! Write your destination folder:')
+        lbl2 = QLabel('Давайте начнём! Введите путь папки назначения:')
         lbl2.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Выравнивание по центру
 
         layout = QFormLayout(self)
@@ -728,16 +728,16 @@ class MainWindow(QWidget):  # Основное окно
         super().__init__()
         global app
         self.database = Database()
-        self.create_note = QPushButton('Create note', self)  # Создание кнопки 'Create note'
+        self.create_note = QPushButton('Создать заметку', self)  # Создание кнопки 'Create note'
         self.create_note.clicked.connect(lambda: self.click_plus())
         self.create_note.setIcon(QIcon('plus.png'))
 
-        self.go_settings = QPushButton('Settings', self)  # Создание кнопки 'Settings'
+        self.go_settings = QPushButton('Настройки', self)  # Создание кнопки 'Settings'
         self.go_settings.clicked.connect(lambda: self.click_settings())
         self.go_settings.setIcon(QIcon('settings.png'))
 
         self.search = QLineEdit(self)
-        self.search.setPlaceholderText('Search here...')
+        self.search.setPlaceholderText('Найти...')
         font = QtGui.QFont()
         font.setPointSize(12)  # Размер шрифта
         self.search.setFont(font)
@@ -778,10 +778,10 @@ class MainWindow(QWidget):  # Основное окно
         if event.type() == event.Type.ContextMenu and source is self.lis:
             menu = QMenu()
 
-            open_action = QAction('Open', self)
+            open_action = QAction('Открыть', self)
             open_action.triggered.connect(lambda: self.open_note())
 
-            delete_action = QAction('Delete', self)
+            delete_action = QAction('Удалить', self)
             delete_action.triggered.connect(lambda: self.delete_action())
 
             menu.addAction(open_action)
@@ -840,7 +840,7 @@ class MainWindow(QWidget):  # Основное окно
         index = text[0:text.find("  ")]
         if 'P' in index:
             num = int(index[0:index.find('P')])
-            dialog = ConfirmPasswordForNoteInputDialog(labels=['Confirm note password'],
+            dialog = ConfirmPasswordForNoteInputDialog(labels=['Подтвердите пароль'],
                                                        number=num)
             dialog.exec()
             if GNote != '':
@@ -859,7 +859,7 @@ class MainWindow(QWidget):  # Основное окно
     def initUI(self):  # Инициализация основного окна
         w, h = list(map(int, Database().get_resolution_main().split('x')))
         self.setGeometry(0, 0, w, h)
-        self.setWindowTitle('PyNote: Main')
+        self.setWindowTitle('PyNote: Главный экран')
         self.setWindowIcon(QIcon('pynote.png'))
 
         self.grid.setSpacing(10)  # Отступы
@@ -894,7 +894,7 @@ class Settings(QWidget):  # Окно настроек
                             '1280x1024', '1600x1200', '1920x1080', '2560x1600']
         self.change_resolution_main = QLabel()
         self.change_resolution_main.setFont(font)
-        self.change_resolution_main.setText('Resolution main window')
+        self.change_resolution_main.setText('Разрешение главного окна')
 
         self.change_resolution_main_combo = QComboBox()
         self.change_resolution_main_combo.setFont(font)
@@ -904,7 +904,7 @@ class Settings(QWidget):  # Окно настроек
 
         self.change_resolution_note = QLabel()
         self.change_resolution_note.setFont(font)
-        self.change_resolution_note.setText('Resolution note window')
+        self.change_resolution_note.setText('Разрешение окна заметок')
 
         self.change_resolution_note_combo = QComboBox()
         self.change_resolution_note_combo.setFont(font)
@@ -914,7 +914,7 @@ class Settings(QWidget):  # Окно настроек
 
         self.new_password = QLabel()
         self.new_password.setFont(font)
-        self.new_password.setText('New key for each note')
+        self.new_password.setText('Новый пароль для каждой новой заметки')
 
         self.check = QCheckBox()
         self.check.setFont(font)
@@ -924,20 +924,20 @@ class Settings(QWidget):  # Окно настроек
 
         self.ask_pass = QLabel()
         self.ask_pass.setFont(font)
-        self.ask_pass.setText('Ask for a key at the entrance')
+        self.ask_pass.setText('Спрашивать ключ при входе')
 
         self.ask_button = QPushButton()
         self.ask_button.setFont(font)
         if self.database.get_ask_key() == 0:
-            self.ask_button.setText('No')
+            self.ask_button.setText('Нет')
         else:
-            self.ask_button.setText('Yes')
+            self.ask_button.setText('Да')
         self.ask_button.clicked.connect(lambda: self.click_ask())
         self.initUI()
 
     def initUI(self):
         self.setGeometry(50, 100, 800, 600)
-        self.setWindowTitle('PyNote: Settings')
+        self.setWindowTitle('PyNote: Настройки')
         self.setWindowIcon(QIcon('pynote.png'))
 
         vertical = QVBoxLayout()
@@ -980,16 +980,16 @@ class Settings(QWidget):  # Окно настроек
             self.database.set_new_key_for_new_note(0)
 
     def click_ask(self):
-        if self.ask_button.text() == 'No':
+        if self.ask_button.text() == 'Нет':
             self.database.set_aks_key(1)
             file = open('key.txt', 'w+')
             file.write('')
             file.close()
-            self.ask_button.setText('Yes')
-        elif self.ask_button.text() == 'Yes':
-            dialog = AreYouSureInputDialog(labels=['Re-enter your key'])
+            self.ask_button.setText('Да')
+        elif self.ask_button.text() == 'Да':
+            dialog = AreYouSureInputDialog(labels=['Введите пароль повторно'])
             dialog.exec()
-            self.ask_button.setText('No')
+            self.ask_button.setText('Нет')
 
 
 font = QtGui.QFont('Courier New')
@@ -1014,44 +1014,44 @@ class Note(QMainWindow):  # Окно создания / редактирован
         self.line.setText(initial_text)
         self.label = self.line.toPlainText()[0:16]
         if self.label != '':
-            self.setWindowTitle(f'PyNote: {self.label} (Saved)')
+            self.setWindowTitle(f'PyNote: {self.label} (Сохранено)')
 
         self.line.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding,
                                                       QtWidgets.QSizePolicy.Policy.MinimumExpanding))
         font.setPointSize(font_size)  # Размер шрифта
         self.line.setFont(font)
-        button_action = QAction("Save                          CTRL+S", self)  # Создание кнопки в меню
+        button_action = QAction("Сохранить                     CTRL+S", self)  # Создание кнопки в меню
         button_action.triggered.connect(lambda: self.click_save())  # Обработка нажатия
         self.shortcut_save = QShortcut(QKeySequence('Ctrl+s'), self)  # Сочетание клавиш на сохранение
         self.shortcut_save.activated.connect(lambda: self.click_save())
 
-        button_action2 = QAction('Save as...       CTRL+SHIFT+S', self)  # Создание второй кнопки в меню
+        button_action2 = QAction('Сохранить как... CTRL+SHIFT+S', self)  # Создание второй кнопки в меню
         button_action2.triggered.connect(lambda: self.click_save_as())  # Обработка нажатия
         self.shortcut_saveAs = QShortcut(QKeySequence('Ctrl+Shift+s'), self)  # Сочетание клавиш на сохранение как
         self.shortcut_saveAs.activated.connect(lambda: self.click_save_as())
 
-        button_action3 = QAction('Exit without save', self)
+        button_action3 = QAction('Выйти без сохранения', self)
         button_action3.triggered.connect(lambda: self.exit_w_s())
 
-        scale_b1 = QAction('Zoom in                                   CTRL+Up', self)
+        scale_b1 = QAction('Приблизить                                CTRL+Up', self)
         scale_b1.triggered.connect(lambda: self.zoom_in())
         self.shortcut_zIn = QShortcut(QKeySequence('Ctrl+Up'), self)  # Сочетание клавиш на увеличение текста
         self.shortcut_zIn.activated.connect(lambda: self.zoom_in())
 
-        scale_b2 = QAction('Zoom out                           CTRL+Down', self)
+        scale_b2 = QAction('Отдалить                                    CTRL+Down', self)
         scale_b2.triggered.connect(lambda: self.zoom_out())
         self.shortcut_zOut = QShortcut(QKeySequence('Ctrl+Down'), self)  # Сочетание клавиш на уменьшение текста
         self.shortcut_zOut.activated.connect(lambda: self.zoom_out())
 
-        scale_default = QAction('Restore default scale                CTRL+0', self)
+        scale_default = QAction('Вернуть приближение по умолчанию     CTRL+0', self)
         scale_default.triggered.connect(lambda: self.zoom_default())
         self.shortcut_zD = QShortcut(QKeySequence('Ctrl+0'), self)  # Сочетание клавиш для размера текста по умолчанию
         self.shortcut_zD.activated.connect(lambda: self.zoom_default())
 
         self.menu = self.menuBar()  # Инициализация меню
-        file_menu = self.menu.addMenu("File")  # Название в меню
-        zoom = self.menu.addMenu('Scale')
-        other = self.menu.addMenu('Other')
+        file_menu = self.menu.addMenu("Файл")  # Название в меню
+        zoom = self.menu.addMenu('Приближение')
+        other = self.menu.addMenu('Другое')
 
         file_menu.addAction(button_action)
         file_menu.addAction(button_action2)
@@ -1068,7 +1068,7 @@ class Note(QMainWindow):  # Окно создания / редактирован
         self.shortcut_csv = QShortcut(QKeySequence('Ctrl+shift+v'), self)  # Вставка csv таблиц
         self.shortcut_csv.activated.connect(lambda: self.parse_csv())
 
-        other_action = QAction('Insert csv table                Ctrl+Shift+V', self)
+        other_action = QAction('Встать csv таблицу              Ctrl+Shift+V', self)
         other_action.triggered.connect(lambda: self.parse_csv())
         other.addAction(other_action)
 
@@ -1078,7 +1078,7 @@ class Note(QMainWindow):  # Окно создания / редактирован
         if not self.editing:
             if self.previous_text == '' and self.previous_text != self.line.toPlainText():
                 if Database().get_new_key_for_new_note() == 1:
-                    dialog = GeneratePasswordForNoteInputDialog(labels=["Create a password"])
+                    dialog = GeneratePasswordForNoteInputDialog(labels=["Придумайте пароль"])
                     dialog.exec()
                     Database().new_note(self.line.toPlainText(), GNote)
                 else:
@@ -1091,11 +1091,11 @@ class Note(QMainWindow):  # Окно создания / редактирован
 
         self.previous_text = self.line.toPlainText()
         self.label = self.line.toPlainText()[0:16]
-        self.setWindowTitle(f'PyNote: {self.label} (Saved)')
+        self.setWindowTitle(f'PyNote: {self.label} (Сохранено)')
 
     def click_save_as(self):  # Функция обработки нажатия save as
         try:
-            file = QtWidgets.QFileDialog.getSaveFileName(None, 'Save', '/', "Text Files (*.txt)")
+            file = QtWidgets.QFileDialog.getSaveFileName(None, 'Сохранить', '/', "Текстовые файлы (*.txt)")
             text = self.line.toPlainText()
             if file[0]:
                 with open(file[0], 'w', encoding='utf-8') as file:
@@ -1130,7 +1130,7 @@ class Note(QMainWindow):  # Окно создания / редактирован
         try:
             text = Tk().clipboard_get()
             try:
-                sp = [re.split(';;|;|,|;;;| ', i) for i in text.split('\n')]  # Разбиение csv на массивы
+                sp = [re.split(';;|;|,|;;;', i) for i in text.split('\n')]  # Разбиение csv на массивы
                 max_len = sorted([len(i) for i in sp])[-1]  # Проверка максимальной длины для каждой строки стобца
                 for i in sp:
                     if len(i) != max_len:
@@ -1157,14 +1157,14 @@ class Note(QMainWindow):  # Окно создания / редактирован
 
     def change_text(self):
         if self.label != '':
-            self.setWindowTitle(f'PyNote: {self.label} (Changes not saved)')
+            self.setWindowTitle(f'PyNote: {self.label} (Изменения не сохранены)')
         else:
-            self.setWindowTitle('PyNote: Example (Not saved)')
+            self.setWindowTitle('PyNote: Объект (Не сохранено)')
 
     def initUI(self):
         w, h = list(map(int, Database().get_resolution_note().split('x')))
         self.setGeometry(0, 0, w, h)
-        self.setWindowTitle('PyNote: Example')
+        self.setWindowTitle('PyNote: Объект')
         self.setWindowIcon(QIcon('pynote.png'))
 
 
