@@ -80,7 +80,16 @@ class Cipher:
                 return i
         return chr(number)
 
-    def get_number_by_dict(self, word):
+    def get_number_by_dict(self, word, tf=False):
+        if tf:
+            if word in self.global_dict and word not in '0123456789':
+                return self.global_dict[word]
+            elif word in '0123456789':
+                k = {'0': 165, '1': 166, '2': 167, '3': 168, '4': 169, '5': 170, '6': 171, '7': 172, '8': 173,
+                     '9': 174}
+                return k[word]
+            else:
+                return ord(word)
         if word in self.global_dict:
             return self.global_dict[word]
         else:
@@ -187,7 +196,7 @@ class Cipher:
         # Подготовительный этап
         text_mas = self.extension_list(list(map(lambda x: int(str(hex(self.get_number_by_dict(x)))[2:], 16), text)))
         key_mas = list(map(lambda x: self.box_function(x), list(map(lambda x:
-                                                                    int(str(hex(self.get_number_by_dict(x)))[2:], 16),
+                                                                    int(str(hex(self.get_number_by_dict(x, True)))[2:], 16),
                                                                     hash_code(key)))))
         key_mas = list(map(lambda x: self.inv_plus(x), key_mas))
         massive_generated_keys = [key_mas]
@@ -222,7 +231,7 @@ class Cipher:
         # Подготовительный этап
         text_mas = self.simple_extension_list(self.dec_base64(text))
         key_mas = list(map(lambda x: self.box_function(x), list(map(lambda x:
-                                                                    int(str(hex(self.get_number_by_dict(x)))[2:], 16),
+                                                                    int(str(hex(self.get_number_by_dict(x, True)))[2:], 16),
                                                                     hash_code(key)))))
         key_mas = list(map(lambda x: self.inv_plus(x), key_mas))
         massive_generated_keys = [key_mas]
