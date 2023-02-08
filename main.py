@@ -1,3 +1,4 @@
+import math
 import os.path
 import random
 import string
@@ -38,143 +39,59 @@ def hash_code(key):
 
 
 class Cipher:
-    def __init__(self, g_mas=None, initial_m=None, prepare_g=0, prepare_m=0):
-        # Проверка на использования личной таблицы box (таблицы замены)
-        if g_mas is not None and initial_m is not None:
-            self.g_mas = g_mas
-            self.initial_m = initial_m
+    def __init__(self, first=None):
+        if first is not None:
+            self.first = first
         else:
-            self.g_mas = [9, 229, 180, 243, 169, 174, 125, 197, 83, 241, 66, 112, 124, 148, 110, 134]
-            # Массив для замены в return box
-            self.initial_m = [92, 55, 33, 124, 8, 183, 140, 171, 136, 129, 126, 154, 216, 150, 40, 106]
-            # Массив для замены m в box
-        self.reverse_g_mas = self.g_mas[::-1]
-        self.reverse_initial_n = self.initial_m[::-1]
-        self.prepare_g = prepare_g
-        self.prepare_m = prepare_m
+            self.first = [90, 114, 89, 97, 104, 28, 82, 86, 90, 119, 22, 124, 73, 21, 36, 21]
+        self.second = [60, 104, 49, 87, 100, 41, 61, 76, 9, 70, 104, 1, 91, 16, 73, 30]
 
-        self.global_dict = {'': 1, 'e': 2, 't': 3, 'a': 4, 'o': 5, 'i': 6, 'n': 7, 's': 8, 'h': 9, 'r': 10, 'd': 11,
-                            'l': 12, 'c': 13, 'u': 14, 'm': 15, 'w': 16, 'f': 17, 'g': 18, 'y': 19, 'p': 20, 'b': 21,
-                            'v': 22, 'k': 23, 'x': 24, 'j': 25, 'q': 26, 'z': 27, ' ': 28,
-                            'E': 29, 'T': 30, 'A': 31, 'O': 32, 'I': 33, 'N': 34, 'S': 35, 'H': 36, 'R': 37, 'D': 38,
-                            'L': 39, 'C': 40, 'U': 41, 'M': 42, 'W': 43, 'F': 44, 'G': 45, 'Y': 46, 'P': 47, 'B': 48,
-                            'V': 49, 'K': 50, 'X': 51, 'J': 52, 'Q': 53, 'Z': 54,
-                            'о': 55, "е": 56, "а": 57, "и": 58, "н": 59, "т": 60, "с": 61, "р": 62, "л": 63, "в": 64,
-                            "к": 65, "д": 66, "м": 67, "п": 68, "у": 69, "г": 70, "б": 71, "з": 72, "я": 73, "ы": 74,
-                            "ь": 75, "ч": 76, "х": 77, "ж": 78, "ш": 79, "ц": 80, "щ": 81, "ф": 82, "ю": 83, "э": 84,
-                            "й": 85, "ё": 86, "ъ": 87, ",": 88, ".": 89,
-                            'О': 90, "Е": 91, "А": 92, "И": 93, "Н": 94, "Т": 95, "С": 96, "Р": 97, "Л": 98, "В": 99,
-                            "К": 100, "Д": 101, "М": 102, "П": 103, "У": 104, "Г": 105, "Б": 106, "З": 107, "Я": 108,
-                            "Ы": 109, "Ч": 110, "Х": 111, "Ж": 112, "Ш": 113, "Ц": 114, "Щ": 115, "Ф": 116, "Ю": 117,
-                            "Э": 118, "Й": 119, "Ё": 120, "Ъ": 121, "Ь": 122, '?': 123, '!': 124, '(': 125, ')': 126,
-                            '"': 127, "'": 128, ':': 129, '<': 130, '>': 131, '[': 132, ']': 133, '\\': 134, '|': 135,
-                            '*': 136, '/': 137, '-': 138, '=': 139, '+': 140, '_': 141, '—': 142, '%': 143, ';': 144,
-                            '$': 145, '&': 146, '^': 147, '#': 148, '№': 149, '@': 150, '`': 151, '~': 152,
-                            '1': 153, '2': 154, '3': 155, '4': 156, '5': 157, '6': 158, '7': 159, '8': 160, '9': 161,
-                            '0': 162, '\n': 163, '\t': 164
-                            }
+    def b64e(self, s):
+        return base64.b64encode(s.encode()).decode()
 
-    def get_word_by_dict(self, number):
-        for i in self.global_dict:
-            if self.global_dict[i] == number:
-                return i
-        return chr(number)
-
-    def get_number_by_dict(self, word, tf=False):
-        if tf:
-            if word in self.global_dict and word not in '0123456789':
-                return self.global_dict[word]
-            elif word in '0123456789':
-                k = {'0': 165, '1': 166, '2': 167, '3': 168, '4': 169, '5': 170, '6': 171, '7': 172, '8': 173,
-                     '9': 174}
-                return k[word]
-            else:
-                return ord(word)
-        if word in self.global_dict:
-            return self.global_dict[word]
-        else:
-            return ord(word)
-
-    def box_function(self, b):
-        self.prepare_g += 1
-        self.prepare_m += 1
-        m = self.initial_m[self.prepare_m % 16]
-        r = 0
-        q = ~ b | 0
-        for i in range(8):
-            r = (r << 1) | (q ^ m)
-            m = (m >> 1) | ((m & 1) << 7)
-        return r ^ self.g_mas[self.prepare_g % 16]
-
-    @staticmethod
-    def inv_plus(x):
-        return -(x + 1)
+    def b64d(self, s):
+        return base64.b64decode(s).decode()
 
     def xor_massive(self, f, s, s2, key1):
-        return [
-            ((self.pol_inversion(f[i]) ^ (~s | ~i)) & ((f[i] & ~self.pol_inversion(s2 ^ i)) ^ key1[(i ^ ~f[i]) % 16])
-             & (key1[(i ^ f[i]) % 16] | self.pol_inversion(s2)))
-            for i in range(len(f))]
+        return [((f[i]) ^ (~s | ~i)) & ((f[i] & ~(s2 ^ i)) ^ key1[(i ^ ~f[i]) % 16])
+                & (key1[(i ^ f[i]) % 16] | s2) for i in range(16)]
+
+    def to_format(self, k):
+        try:
+            for i in range(16 - len(k)):
+                k.append((self.second[(~i | self.second[(i ^ 24) % 16]) % 16] + i))
+            return k
+        except BaseException:
+            return k
 
     @staticmethod
-    def extension_list(massive):
-        [massive.append(1) for _ in range(32 - len(massive) % 32)]
-        return [list(i) for i in np.hsplit(np.array(massive), len(massive) / 32)]
+    def func(value, n1, n2):
+        return (value ^ n1) ^ n2
 
     @staticmethod
-    def simple_extension_list(massive):
-        return [list(i) for i in np.hsplit(np.array(massive), len(massive) / 32)]
-
-    def enc_base64(self, value):  # на вход массив чисел - выход строка
-        a = base64.b64encode(self.joined(list(map(str, value))).encode('UTF-8')).decode('UTF-8')
-        return a
-
-    def dec_base64(self, value):  # вход строка - выход массив чисел
-        return list(map(lambda x: self.undo(x), base64.b64decode(value).decode('UTF-8').split()))
-
-    def joined(self, massive):  # Перевод массива в строку
-        a = ''
-        for i in massive:
-            for t in str(i).replace('[', '').replace(']', '').split(', '):
-                a += str(self.convert_base(int(t), 36)) + ' '
-        return a
-
-    def to_final_chr(self, massive):  # Финальный перевод массива в chr
-        a = ''
-        for i in massive:
-            for t in i:
-                if t != 1:
-                    a += self.get_word_by_dict(int(t))
-                else:
-                    return a
-        return a
+    def func2(value, k1):
+        return (value ^ (k1 | (int(math.sqrt(k1)) + 1))) ^ (int(math.sqrt(math.sqrt(k1))) + 1)
 
     @staticmethod
-    def convert_base(num, to_base=10, from_base=10):
-        n = int(num, from_base) if isinstance(num, str) else num
-        alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        res = ""
-        while n > 0:
-            n, m = divmod(n, to_base)
-            res += alphabet[m]
-        return res[::-1]
+    def func3(value, k1):
+        value ^= (sum([int(v) for v in str(k1 ** 0.125).replace('.', '')]) + 1)
+        return value
 
     @staticmethod
-    def s_box(element, n1, n2):
-        m = n1
-        r = 0
-        q = ~ element | 0
-        for i in range(16):
-            r = (r << 1) | (q ^ m)
-            m = (m >> 1) | ((m & 1) << 7)
-            return r ^ n2
+    def func4(value, k2):
+        return ~(~value ^ k2)
+
+    @staticmethod
+    def rotate_List1(arry, E, K):
+        arry[:] = arry[E:K] + arry[0:E]
+        return arry
 
     @staticmethod
     def pol_inversion(value):
         b = bin(value)[2:]
         s = ''
         for el in range(len(b)):
-            if el >= 2:
+            if el == 2:
                 if b[el] == '1':
                     s += '0'
                 else:
@@ -183,83 +100,54 @@ class Cipher:
                 s += b[el]
         return int(s, 2)
 
-    @staticmethod
-    def undo(el):
-        return int(el, 36)
-
-    @staticmethod
-    def rotate_List1(arry, E, K):
-        arry[:] = arry[E:K] + arry[0:E]
-        return arry
-
-    def encrypt(self, text: str, key: str) -> str:
-        # Подготовительный этап
-        text_mas = self.extension_list(list(map(lambda x: int(str(hex(self.get_number_by_dict(x)))[2:], 16), text)))
-        key_mas = list(map(lambda x: self.box_function(x), list(map(lambda x:
-                                                                    int(str(hex(self.get_number_by_dict(x, True)))[2:], 16),
-                                                                    hash_code(key)))))
-        key_mas = list(map(lambda x: self.inv_plus(x), key_mas))
+    def encrypt(self, text, key):
+        text_mas = [ord(i) for i in self.b64e(text)]
+        key_mas = self.to_format([ord(i) for i in self.b64e(hash_code(key))])
         massive_generated_keys = [key_mas]
         for i in range(1, 16):  # Генерируем 16 массивов ключей
             massive_generated_keys.append(
-                list(map(lambda x: x ^ self.initial_m[i], self.xor_massive(massive_generated_keys[i - 1],
-                                                                           self.initial_m[i],
-                                                                           self.g_mas[i], key_mas)))
+                list(map(lambda x: (x ^ self.first[i]) % 126 + 1, self.xor_massive(massive_generated_keys[i - 1],
+                                                                       self.first[i],
+                                                                       self.second[i], key_mas)))
             )
-        time = []
-        m = []
-        for i in range(16):
-            time.clear()
-            k = 0
-            for massive in text_mas:
-                m.clear()
-                k += 1
-                m = list(map(lambda x: x << (key_mas[k % 32] % 4), massive))
-                for ind in range(len(m)):
-                    m[ind] = self.pol_inversion(self.inv_plus(self.s_box(int(str(hex(m[ind]))[2:], 16),
-                                                      int(str(hex(massive_generated_keys[i][k % 32]))[2:], 16),
-                                                      int(str(hex(massive_generated_keys[i][k % 32]))[2:], 16)))
-                                                << (massive_generated_keys[i][k % 32] % 16))
-                    if ind <= i:
-                        m[ind] -= i
+        for gIndex in range(16):
+            gMas = massive_generated_keys[gIndex]
+            for index in range(len(text_mas)):
+                text_mas[index] = self.func(text_mas[index], gMas[(gIndex + index) % 16], (self.second[(gIndex + index) % 16] ^ 125) % 126 + 1)
+                text_mas[index] ^= gMas[gIndex]
+                text_mas[index] ^= key_mas[gIndex]
+                text_mas[index] = self.func2(text_mas[index], key_mas[gIndex])
+                text_mas[index] = self.func3(text_mas[index], key_mas[gIndex])
+                text_mas[index] = self.func4(text_mas[index], key_mas[gIndex])
+                key_mas = self.rotate_List1(key_mas, gIndex, len(key_mas))
+                text_mas = self.rotate_List1(text_mas, gIndex, len(text_mas))
 
-                time.append(self.rotate_List1(m.copy(), i, 32))
-            text_mas = time.copy()
-        return self.enc_base64(text_mas)
+        return ' '.join([str(i) for i in text_mas])
 
-    def decrypt(self, text: str, key: str) -> str:
-        # Подготовительный этап
-        text_mas = self.simple_extension_list(self.dec_base64(text))
-        key_mas = list(map(lambda x: self.box_function(x), list(map(lambda x:
-                                                                    int(str(hex(self.get_number_by_dict(x, True)))[2:], 16),
-                                                                    hash_code(key)))))
-        key_mas = list(map(lambda x: self.inv_plus(x), key_mas))
+    def decrypt(self, text, key):
+        text_mas = [int(i) for i in text.split()]
+        key_mas = self.to_format([ord(i) for i in self.b64e(hash_code(key))])
         massive_generated_keys = [key_mas]
         for i in range(1, 16):  # Генерируем 16 массивов ключей
             massive_generated_keys.append(
-                list(map(lambda x: x ^ self.initial_m[i], self.xor_massive(massive_generated_keys[i - 1],
-                                                                           self.initial_m[i],
-                                                                           self.g_mas[i], key_mas)))
+                list(map(lambda x: (x ^ self.first[i]) % 126 + 1, self.xor_massive(massive_generated_keys[i - 1],
+                                                                                   self.first[i],
+                                                                                   self.second[i], key_mas)))
             )
-        time = []
-        m = []
-        for i in range(16):
-            time.clear()
-            k = 0
-            for massive in text_mas:
-                m.clear()
-                k += 1
-                m = list(map(lambda x: x >> (key_mas[k % 32] % 4), massive))
-                for ind in range(len(m)):
-                    if ind <= i:
-                        m[ind] -= i
-                    m[ind] = self.pol_inversion(self.inv_plus(self.s_box(int(str(hex(m[ind]))[2:], 16),
-                                                           int(str(hex(massive_generated_keys[i][k % 32]))[2:], 16),
-                                                           int(str(hex(massive_generated_keys[i][k % 32]))[2:], 16)))
-                              >> (massive_generated_keys[i][k % 32] % 16))
-                time.append(self.rotate_List1(m.copy(), 16 - i, 32))
-            text_mas = time.copy()
-        return self.to_final_chr(text_mas)
+        for gIndex in range(16):
+            gMas = massive_generated_keys[gIndex]
+            for index in range(len(text_mas)):
+                text_mas[index] = self.func(text_mas[index], gMas[(gIndex + index) % 16], (self.second[(gIndex + index) % 16] ^ 125) % 126 + 1)
+                text_mas[index] ^= gMas[gIndex]
+                text_mas[index] ^= key_mas[gIndex]
+                text_mas[index] = self.func2(text_mas[index], key_mas[gIndex])
+                text_mas[index] = self.func3(text_mas[index], key_mas[gIndex])
+                text_mas[index] = self.func4(text_mas[index], key_mas[gIndex])
+                key_mas = self.rotate_List1(key_mas, gIndex, len(key_mas))
+                text_mas = self.rotate_List1(text_mas, gIndex, len(text_mas))
+
+        return self.b64d(''.join([chr(i) for i in text_mas]))
+
 
 
 def notify(text, title):  # Функция для уведомления пользователя, автоматически не скипается
