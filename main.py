@@ -4,7 +4,6 @@ import random
 import string
 import sys
 import re
-import plyer
 import sqlite3
 from PyQt6 import QtGui, QtWidgets
 from PyQt6.QtCore import Qt
@@ -14,22 +13,11 @@ from tkinter import Tk
 
 import base64
 import hashlib
-import numpy as np
 
 Gkey = ''  # Временная переменная для хранения ключа шифрования
 GEnter = True  # Переменная отвечающая за закрытие основного окна при неподтверждении пароля
 GNote = ''  # Временная переменная для хранения ключа шифрования для отдельной заметки
 open_or_delete = -1  # Временная переменная для menu в Main | 0 -> open | 1 -> delete
-
-
-def to_primary_key(key: str) -> str:  # Приводит длину ключа в 16 символов, если требуется
-    le = len(key)
-    if le == 16:
-        return key
-    elif le > 16:
-        return key[0:16]
-    else:
-        return key + '0' * (16 - le)
 
 
 def hash_code(key):
@@ -86,74 +74,65 @@ class Cipher:
         arry[:] = arry[E:K] + arry[0:E]
         return arry
 
-    @staticmethod
-    def pol_inversion(value):
-        b = bin(value)[2:]
-        s = ''
-        for el in range(len(b)):
-            if el == 2:
-                if b[el] == '1':
-                    s += '0'
-                else:
-                    s += '1'
-            else:
-                s += b[el]
-        return int(s, 2)
-
     def encrypt(self, text, key):
         text_mas = [ord(i) for i in self.b64e(text)]
-        key_mas = self.to_format([ord(i) for i in self.b64e(hash_code(key))])
+        key_mas = self.to_format([ord(i) for i in (hash_code(key))])
+        hash_mas = [ord(i) for i in hash_code(self.b64e(key))]
         massive_generated_keys = [key_mas]
-        for i in range(1, 16):  # Генерируем 16 массивов ключей
-            massive_generated_keys.append(
-                list(map(lambda x: (x ^ self.first[i]) % 126 + 1, self.xor_massive(massive_generated_keys[i - 1],
-                                                                       self.first[i],
-                                                                       self.second[i], key_mas)))
-            )
+        leTextMas = len(text_mas)
+        i = 1
         for gIndex in range(16):
+            if i <= 15:
+                massive_generated_keys.append(
+                    list(map(lambda x: (x ^ self.first[i]) % 126 + 1, self.xor_massive(massive_generated_keys[i - 1],
+                                                                                       self.first[i],
+                                                                                       self.second[i], key_mas)))
+                )
+            i += 1
             gMas = massive_generated_keys[gIndex]
-            for index in range(len(text_mas)):
+            for index in range(leTextMas):
                 text_mas[index] = self.func(text_mas[index], gMas[(gIndex + index) % 16], (self.second[(gIndex + index) % 16] ^ 125) % 126 + 1)
                 text_mas[index] ^= gMas[gIndex]
                 text_mas[index] ^= key_mas[gIndex]
                 text_mas[index] = self.func2(text_mas[index], key_mas[gIndex])
-                text_mas[index] = self.func3(text_mas[index], key_mas[gIndex])
+                text_mas[index] = self.func3(text_mas[index], key_mas[-gIndex])
                 text_mas[index] = self.func4(text_mas[index], key_mas[gIndex])
-                key_mas = self.rotate_List1(key_mas, gIndex, len(key_mas))
-                text_mas = self.rotate_List1(text_mas, gIndex, len(text_mas))
-
+                text_mas[index] ^= key_mas[-gIndex]
+                key_mas = self.rotate_List1(key_mas, gIndex, 32)
+                text_mas = self.rotate_List1(text_mas, (gIndex + hash_mas[gIndex] + hash_mas[-gIndex]) % (leTextMas - 1), leTextMas)
+            hash_mas = self.rotate_List1(hash_mas, 2, 32)
+            hash_mas = [(i ^ (self.second[gIndex] + 1) + 1) for i in hash_mas]
         return ' '.join([str(i) for i in text_mas])
 
     def decrypt(self, text, key):
         text_mas = [int(i) for i in text.split()]
-        key_mas = self.to_format([ord(i) for i in self.b64e(hash_code(key))])
+        key_mas = self.to_format([ord(i) for i in (hash_code(key))])
+        hash_text_mas = [ord(i) for i in hash_code(self.b64e(key))]
         massive_generated_keys = [key_mas]
-        for i in range(1, 16):  # Генерируем 16 массивов ключей
-            massive_generated_keys.append(
-                list(map(lambda x: (x ^ self.first[i]) % 126 + 1, self.xor_massive(massive_generated_keys[i - 1],
-                                                                                   self.first[i],
-                                                                                   self.second[i], key_mas)))
-            )
+        leTextMas = len(text_mas)
+        i = 1
         for gIndex in range(16):
+            if i <= 15:
+                massive_generated_keys.append(
+                    list(map(lambda x: (x ^ self.first[i]) % 126 + 1, self.xor_massive(massive_generated_keys[i - 1],
+                                                                                       self.first[i],
+                                                                                       self.second[i], key_mas)))
+                )
+            i += 1
             gMas = massive_generated_keys[gIndex]
-            for index in range(len(text_mas)):
+            for index in range(leTextMas):
                 text_mas[index] = self.func(text_mas[index], gMas[(gIndex + index) % 16], (self.second[(gIndex + index) % 16] ^ 125) % 126 + 1)
                 text_mas[index] ^= gMas[gIndex]
                 text_mas[index] ^= key_mas[gIndex]
                 text_mas[index] = self.func2(text_mas[index], key_mas[gIndex])
-                text_mas[index] = self.func3(text_mas[index], key_mas[gIndex])
+                text_mas[index] = self.func3(text_mas[index], key_mas[-gIndex])
                 text_mas[index] = self.func4(text_mas[index], key_mas[gIndex])
-                key_mas = self.rotate_List1(key_mas, gIndex, len(key_mas))
-                text_mas = self.rotate_List1(text_mas, gIndex, len(text_mas))
-
+                text_mas[index] ^= key_mas[-gIndex]
+                key_mas = self.rotate_List1(key_mas, gIndex, 32)
+                text_mas = self.rotate_List1(text_mas, (gIndex + hash_text_mas[gIndex] + hash_text_mas[-gIndex]) % (leTextMas - 1), leTextMas)
+            hash_text_mas = self.rotate_List1(hash_text_mas, 2, 32)
+            hash_text_mas = [(i ^ (self.second[gIndex] + 1) + 1) for i in hash_text_mas]
         return self.b64d(''.join([chr(i) for i in text_mas]))
-
-
-
-def notify(text, title):  # Функция для уведомления пользователя, автоматически не скипается
-    pass
-    # plyer.notification.notify(message=f'{text}', app_name='PyNote', app_icon=r'pynote.ico',
-    #                           title=title)
 
 
 def confirm():  # Проверка пароля
@@ -270,7 +249,6 @@ class AreYouSureInputDialog(QDialog):  # Окно, открываемое в с�
             Database().set_aks_key(0)
             self.close()
         else:
-            notify('Your key is wrong!', 'Check the input line')
             self.close()
 
 
@@ -297,13 +275,9 @@ class MyInputDialog(QDialog):  # Окно, открываемое в случа�
             if not self.getInputs()[1]:
                 k = random_key()
                 Database().create_database_(hash_code(k), self.getInputs()[0])
-                notify(k, 'Remember your key!')
             else:
                 Database().create_database_(hash_code(self.getInputs()[1]), self.getInputs()[0])
-                notify(self.getInputs()[1], 'Remember your key!')
             self.close()
-        else:
-            notify('Check the input lines', 'Error')
 
 
 class Database:  # Класс для обработки sqlite запросов
@@ -334,7 +308,7 @@ class Database:  # Класс для обработки sqlite запросов
             file.write(path)
             file.close()
         except sqlite3.Error as error:
-            notify(f'{error}', 'Error')
+            pass
 
     def create_notes(self, path):  # Создание базы данных для создания заметок
         try:
@@ -581,17 +555,12 @@ class Example(QWidget):  # Стартовое окно
                             d.create_database_(ha, self.edt1.text())
                             d.create_notes(self.edt1.text())
                             d.create_settings(self.edt1.text())
-                            notify(Gkey, 'Remember your key!')  # Уведомляем пользователя, чтобы он запомнил свой ключ
 
                             self.close()  # Закрываем окно
                             self.wm = MainWindow()  # Открываем основное окно
                             self.wm.show()
                         except sqlite3.Error as error:
                             pass
-                    else:
-                        notify('Probably your destination folder path is wrong!', 'Attention!')
-            else:
-                notify('Check the input line', 'Error!')
         except AttributeError:
             pass
 
